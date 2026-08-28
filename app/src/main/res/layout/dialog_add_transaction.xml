@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Thêm Giao Dịch Mới"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="#000000"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Chọn Loại: Thu hay Chi -->
+    <RadioGroup
+        android:id="@+id/rgType"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginBottom="16dp">
+
+        <RadioButton
+            android:id="@+id/rbExpense"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Tiền Chi (-)"
+            android:checked="true"/>
+
+        <RadioButton
+            android:id="@+id/rbIncome"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Tiền Thu (+)"/>
+    </RadioGroup>
+
+    <!-- Nhập Số tiền -->
+    <EditText
+        android:id="@+id/edtAmount"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:hint="Số tiền (VNĐ)"
+        android:inputType="numberDecimal"
+        android:background="@android:drawable/editbox_background"
+        android:paddingHorizontal="12dp"
+        android:layout_marginBottom="12dp"/>
+
+    <!-- Nhập Danh mục -->
+    <EditText
+        android:id="@+id/edtCategory"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:hint="Danh mục (Ví dụ: Ăn uống, Đổ xăng, Lương...)"
+        android:background="@android:drawable/editbox_background"
+        android:paddingHorizontal="12dp"
+        android:layout_marginBottom="12dp"/>
+
+    <!-- Nhập Ghi chú -->
+    <EditText
+        android:id="@+id/edtNote"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:hint="Ghi chú (không bắt buộc)"
+        android:background="@android:drawable/editbox_background"
+        android:paddingHorizontal="12dp"
+        android:layout_marginBottom="20dp"/>
+
+    <Button
+        android:id="@+id/btnSaveTransaction"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:text="Lưu Giao Dịch"
+        android:backgroundTint="#2196F3"
+        android:textColor="#FFFFFF"/>
+</LinearLayout>
