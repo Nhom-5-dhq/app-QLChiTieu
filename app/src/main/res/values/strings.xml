@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">AppQuanLyChiTieu</string>
+    <string name="default_web_client_id" translatable="false">147439224662-2s5u2fs2tramemanluvl11p40s40ff1a.apps.googleusercontent.com</string>
 </resources>

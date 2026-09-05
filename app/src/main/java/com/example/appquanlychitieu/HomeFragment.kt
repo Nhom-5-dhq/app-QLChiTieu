@@ -1,32 +1,30 @@
 package com.example.appquanlychitieu
 
+import android.app.AlertDialog
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
-import android.widget.TextView
-import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
+import android.widget.*
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.util.*
 
 class HomeFragment : Fragment() {
 
-    private lateinit var tvTotalBalance: TextView
+    private lateinit var tvBalance: TextView
     private lateinit var tvTotalIncome: TextView
     private lateinit var tvTotalExpense: TextView
-    private lateinit var btnViewHistory: LinearLayout
+    private lateinit var boxTotalIncome: LinearLayout
+    private lateinit var boxTotalExpense: LinearLayout
     private lateinit var rvTransactions: RecyclerView
 
-    private val transactionList = mutableListOf<Transaction>()
     private lateinit var adapter: TransactionAdapter
+    private val transactionList = mutableListOf<Transaction>()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -34,25 +32,39 @@ class HomeFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_home, container, false)
 
-        tvTotalBalance = view.findViewById(R.id.tvTotalBalance)
+        // Khớp ID chính xác với fragment_home.xml
+        tvBalance = view.findViewById(R.id.tvBalance)
         tvTotalIncome = view.findViewById(R.id.tvTotalIncome)
         tvTotalExpense = view.findViewById(R.id.tvTotalExpense)
-        btnViewHistory = view.findViewById(R.id.btnViewHistory)
-        rvTransactions = view.findViewById(R.id.rvTransactions)
+        boxTotalIncome = view.findViewById(R.id.boxTotalIncome)
+        boxTotalExpense = view.findViewById(R.id.boxTotalExpense)
 
-        rvTransactions.layoutManager = LinearLayoutManager(requireContext())
-        adapter = TransactionAdapter(transactionList) { item ->
-            showTransactionDetailDialog(item)
+        setupRecyclerView()
+
+        // Bấm Tổng Thu -> Mở Trang Lịch sử Tổng thu
+        boxTotalIncome.setOnClickListener {
+            val intent = Intent(requireContext(), TransactionHistoryActivity::class.java)
+            intent.putExtra("TYPE", "INCOME")
+            startActivity(intent)
         }
-        rvTransactions.adapter = adapter
 
-        btnViewHistory.setOnClickListener {
-            Toast.makeText(requireContext(), "Bạn đang ở màn hình Lịch sử giao dịch", Toast.LENGTH_SHORT).show()
+        // Bấm Tổng Chi -> Mở Trang Lịch sử Tổng chi
+        boxTotalExpense.setOnClickListener {
+            val intent = Intent(requireContext(), TransactionHistoryActivity::class.java)
+            intent.putExtra("TYPE", "EXPENSE")
+            startActivity(intent)
         }
 
         loadTransactions()
-
         return view
+    }
+
+    private fun setupRecyclerView() {
+        adapter = TransactionAdapter(transactionList) { transaction ->
+            showTransactionDetailDialog(transaction)
+        }
+        rvTransactions.layoutManager = LinearLayoutManager(requireContext())
+        rvTransactions.adapter = adapter
     }
 
     private fun loadTransactions() {
@@ -63,57 +75,119 @@ class HomeFragment : Fragment() {
             .get()
             .addOnSuccessListener { querySnapshot ->
                 transactionList.clear()
-                var totalIncome = 0.0
-                var totalExpense = 0.0
+                var totalInc = 0.0
+                var totalExp = 0.0
 
                 for (doc in querySnapshot) {
-                    val id = doc.getString("id") ?: ""
+                    val id = doc.id
                     val amount = doc.getDouble("amount") ?: 0.0
-                    val type = doc.getString("type") ?: ""
-                    val category = doc.getString("category") ?: ""
+                    val category = doc.getString("category") ?: "Khác"
                     val note = doc.getString("note") ?: ""
-                    val date = doc.getLong("date") ?: 0L
+                    val type = doc.getString("type") ?: ""
+                    val date = doc.getLong("date") ?: System.currentTimeMillis()
 
-                    val transaction = Transaction(id, amount, type, category, note, date)
+                    val transaction = Transaction(id, amount, category, note, type, date)
                     transactionList.add(transaction)
 
-                    if (type == "EXPENSE") {
-                        totalExpense += amount
-                    } else if (type == "INCOME") {
-                        totalIncome += amount
+                    if (type == "INCOME" || type == "THU") {
+                        totalInc += amount
+                    } else if (type == "EXPENSE" || type == "CHI") {
+                        totalExp += amount
                     }
                 }
 
-                // Sắp xếp ngày mới nhất lên đầu
                 transactionList.sortByDescending { it.date }
-                adapter.notifyDataSetChanged()
 
-                // Cập nhật các ô số tiền
-                val balance = totalIncome - totalExpense
-                tvTotalBalance.text = String.format("%,.0f đ", balance)
-                tvTotalIncome.text = String.format("%,.0f đ", totalIncome)
-                tvTotalExpense.text = String.format("%,.0f đ", totalExpense)
+                val balance = totalInc - totalExp
+                tvBalance.text = String.format("%,.0f đ", balance)
+                tvTotalIncome.text = String.format("%,.0f đ", totalInc)
+                tvTotalExpense.text = String.format("%,.0f đ", totalExp)
+
+                adapter.updateData(transactionList)
             }
     }
 
-    // Hiển thị Dialog chi tiết giao dịch khi bấm vào từng mục
-    private fun showTransactionDetailDialog(item: Transaction) {
-        val sdf = SimpleDateFormat("HH:mm:ss - dd/MM/yyyy", Locale.getDefault())
-        val dateStr = sdf.format(Date(item.date))
-        val typeStr = if (item.type == "EXPENSE") "Chi tiêu" else "Thu nhập"
+    private fun showTransactionDetailDialog(transaction: Transaction) {
+        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_transaction_detail, null)
+        val builder = AlertDialog.Builder(requireContext()).setView(dialogView)
+        val dialog = builder.create()
 
-        val message = """
-            📌 Danh mục: ${item.category}
-            💵 Số tiền: ${String.format("%,.0f đ", item.amount)}
-            🏷 Loại: $typeStr
-            📅 Thời gian: $dateStr
-            📝 Ghi chú: ${if (item.note.isNotEmpty()) item.note else "Không có"}
-        """.trimIndent()
+        val etAmount = dialogView.findViewById<EditText>(R.id.etAmount)
+        val spinnerCategory = dialogView.findViewById<Spinner>(R.id.spinnerCategory)
+        val etNote = dialogView.findViewById<EditText>(R.id.etNote)
+        val btnDelete = dialogView.findViewById<Button>(R.id.btnDelete)
+        val btnUpdate = dialogView.findViewById<Button>(R.id.btnUpdate)
 
-        AlertDialog.Builder(requireContext())
-            .setTitle("Chi tiết giao dịch")
-            .setMessage(message)
-            .setPositiveButton("Đóng") { dialog, _ -> dialog.dismiss() }
-            .show()
+        etAmount.setText(transaction.amount.toString())
+        etNote.setText(transaction.note)
+
+        val categories = if (transaction.type == "EXPENSE" || transaction.type == "CHI") {
+            arrayOf("Ăn uống", "Mua sắm", "Chi tiêu gia đình", "Chi tiêu cá nhân", "Khác")
+        } else {
+            arrayOf("Lương", "Khác")
+        }
+
+        val adapterCategory = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, categories)
+        adapterCategory.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerCategory.adapter = adapterCategory
+
+        val catIndex = categories.indexOf(transaction.category)
+        if (catIndex >= 0) spinnerCategory.setSelection(catIndex)
+
+        // Bấm SỬA trong Dialog
+        btnUpdate.setOnClickListener {
+            val newAmount = etAmount.text.toString().toDoubleOrNull() ?: transaction.amount
+            val newCategory = spinnerCategory.selectedItem.toString()
+            val newNote = etNote.text.toString().trim()
+
+            updateTransactionInFirestore(transaction.id, newAmount, newCategory, newNote)
+            dialog.dismiss()
+        }
+
+        // Bấm XÓA trong Dialog
+        btnDelete.setOnClickListener {
+            dialog.dismiss()
+            deleteTransactionFromFirestore(transaction)
+        }
+
+        dialog.show()
+    }
+
+    private fun updateTransactionInFirestore(id: String, amount: Double, category: String, note: String) {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val db = FirebaseFirestore.getInstance()
+
+        val updates = hashMapOf<String, Any>(
+            "amount" to amount,
+            "category" to category,
+            "note" to note
+        )
+
+        db.collection("users").document(userId).collection("transactions")
+            .document(id)
+            .update(updates)
+            .addOnSuccessListener {
+                Toast.makeText(requireContext(), "Cập nhật thành công!", Toast.LENGTH_SHORT).show()
+                loadTransactions()
+            }
+            .addOnFailureListener {
+                Toast.makeText(requireContext(), "Lỗi khi cập nhật!", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun deleteTransactionFromFirestore(transaction: Transaction) {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val db = FirebaseFirestore.getInstance()
+
+        db.collection("users").document(userId).collection("transactions")
+            .document(transaction.id)
+            .delete()
+            .addOnSuccessListener {
+                Toast.makeText(requireContext(), "Đã xóa giao dịch", Toast.LENGTH_SHORT).show()
+                loadTransactions()
+            }
+            .addOnFailureListener {
+                Toast.makeText(requireContext(), "Lỗi khi xóa giao dịch", Toast.LENGTH_SHORT).show()
+            }
     }
 }
