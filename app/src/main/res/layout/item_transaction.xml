@@ -2,9 +2,9 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="12dp"
+    android:layout_marginBottom="10dp"
     android:background="@drawable/bg_card_white"
-    android:elevation="1dp"
+    android:elevation="2dp"
     android:orientation="horizontal"
     android:padding="16dp">
 
@@ -18,8 +18,7 @@
             android:id="@+id/tvCategory"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Ăn uống"
-            android:textColor="#212121"
+            android:textColor="#0F172A"
             android:textSize="16sp"
             android:textStyle="bold" />
 
@@ -28,8 +27,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
-            android:text="Ghi chú"
-            android:textColor="#757575"
+            android:textColor="#64748B"
             android:textSize="13sp" />
 
         <TextView
@@ -37,8 +35,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="12:30 - 28/08/2026"
-            android:textColor="#B0BEC5"
+            android:textColor="#94A3B8"
             android:textSize="11sp" />
     </LinearLayout>
 
@@ -47,8 +44,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
-        android:text="-50,000 đ"
-        android:textColor="#F44336"
         android:textSize="16sp"
         android:textStyle="bold" />
 
